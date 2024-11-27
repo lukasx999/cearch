@@ -7,6 +7,7 @@
 #include <string.h>
 
 #include "./tokenizer.h"
+#include "./parser.h"
 
 
 
@@ -70,6 +71,10 @@ int main(int argc, char **argv) {
             break;
         }
     }
+
+
+    parse(tokens);
+
 
 
     free(file);

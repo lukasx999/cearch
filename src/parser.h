@@ -17,6 +17,22 @@ typedef struct {
     FunctionParameter *parameters;
 } Function;
 
+// TODO: Macros, Structs
+
+typedef struct {
+    enum {
+        THING_TAG_FUNCTION,
+    } tag;
+    union {
+        Function thing_function;
+    };
+} Thing;
+
+
+extern void parse(Tokens tokens);
+
+
+
 
 
 #endif // _PARSER_H
