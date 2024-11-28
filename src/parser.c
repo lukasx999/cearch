@@ -9,20 +9,51 @@
 
 
 
+static Token parser_current_token(Parser *p) {
+    return p->tokens.items[p->position];
+}
+
+static void parser_next_token(Parser *p) {
+    p->position++;
+}
+
+
+
+
+
+void prod_parameter(Parser *p) {
+    // parameter ::= <modifier>* <type> "*"? <identifier>?
+}
+
+void prod_parameterlist(Parser *p) {
+    // parameterlist ::= <parameter> ("," <parameter>)*
+}
+
+void prod_function(Parser *p) {
+    // function ::= <modifier>* <returntype> "*"? <identifier> "(" <parameterlist>? | "void" ")" ";"
+
+
+    Function func = { 0 };
+
+
+    Token current = parser_current_token(p);
+
+    while (current.kind == TOK_KW_CONST) {
+        parser_next_token(p);
+    }
+
+
+
+}
+
+
+
 void parse(Tokens tokens) {
 
-    // function ::= <modifier>* <returntype> <identifier> "(" <parameterlist>? | "void" ")" ";"
-    // parameterlist ::= <parameter> ("," <parameter>)*
-    // parameter ::= <modifier>* <type> <identifier>?
+    Parser parser = { .tokens = tokens, .position = 0 };
 
-    for (size_t i=0; i < tokens.size-1; ++i) {
-        Token token = tokens.items[i];
+    prod_function(&parser);
 
-
-
-
-
-    }
 
 
 
