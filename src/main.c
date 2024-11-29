@@ -11,6 +11,9 @@
 #include "./export.h"
 
 
+#define INPUT_BUFSIZE 100
+
+
 
 void check_usage(int argc, char *argv[]) {
 
@@ -58,6 +61,7 @@ enum CXChildVisitResult visit(
     CXType type              = clang_getCursorType(cursor);
 
     switch (kind) {
+
         case CXCursor_FunctionDecl: {
 
             CXType func_returntype  = clang_getResultType(type);
@@ -68,8 +72,8 @@ enum CXChildVisitResult visit(
             state->params_index = 0;
 
             Function func = {
-                .identifier  = { 0 },
                 .returntype  = func_returntype,
+                .identifier  = { 0 },
                 .parameters  = params,
                 .param_count = (size_t) param_count,
             };
@@ -158,6 +162,17 @@ int main(int argc, char *argv[]) {
     clang_visitChildren(cursor, visit, &state);
 
     functions_print(&funcs);
+
+
+    // (int, char, bool) -> int
+    char buf[INPUT_BUFSIZE] = { 0 };
+    fgets(buf, INPUT_BUFSIZE, stdin);
+    buf[strcspn(buf, "\n")] = '\0';
+
+    puts(buf);
+
+
+
 
     functions_destroy(&funcs);
 
