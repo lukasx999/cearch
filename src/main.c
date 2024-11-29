@@ -2,84 +2,91 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <sys/stat.h>
-#include <ctype.h>
+#include <stdarg.h>
 #include <string.h>
+#include <sys/stat.h>
 
-#include "./tokenizer.h"
-#include "./parser.h"
-
-
+#include <clang-c/Index.h>
 
 
-// Caller is responsible for calling free()
-char* read_file(const char *filename) {
 
-    FILE *file = fopen(filename, "r");
-    struct stat stat_buf = { 0 };
 
-    stat(filename, &stat_buf);
-    size_t file_size = stat_buf.st_size;
 
-    char *mem = calloc(file_size + 1, sizeof(char)); // NOTE: +1 for nullbyte
-    size_t mem_index = 0;
+void check_usage(int argc, char *argv[]) {
 
-    char c = '\0';
-    while ((c = fgetc(file)) != EOF) {
-        mem[mem_index++] = c;
+    if (argc < 2 || argc > 2) {
+        fprintf(stderr, "Usage: %s <file>\n", argv[0]);
+        exit(EXIT_FAILURE);
     }
-
-    fclose(file);
-    return mem;
 
 }
 
 
 
-int main(int argc, char **argv) {
 
-    #if 0
-    if (argc < 2 || argc > 2) {
-        fprintf(stderr, "Usage: %s <file>\n", argv[0]);
-        exit(1);
+enum CXChildVisitResult visit(
+    CXCursor cursor,
+    CXCursor parent,
+    CXClientData client_data
+) {
+
+
+    CXType type = clang_getCursorType(cursor);
+
+
+
+    /*
+    enum CXCursorKind kind = clang_getCursorKind(cursor);
+    switch (kind) {
+        case CXCursor_FunctionDecl: {
+        } break;
+
+        case CXCursor_ParmDecl: {
+        } break;
     }
+    */
 
-    const char *filename = argv[1];
-    #endif
+
+    CXString str = clang_getCursorDisplayName(cursor);
+
+    const char *c_str = clang_getCString(str);
+    printf("%s\n", c_str);
+
+    clang_disposeString(str);
+
+    return CXChildVisit_Recurse;
+
+}
+
+
+
+int main(int argc, char *argv[]) {
+
+    // check_usage(argc, argv);
+    // const char *filename = argv[1];
 
     const char *filename = "example.h";
 
-    char *file = read_file(filename);
+    CXIndex index = clang_createIndex(0, 0);
 
+    CXTranslationUnit unit = clang_parseTranslationUnit(
+        index,
+        filename,
+        NULL,
+        0,
+        NULL,
+        0,
+        CXTranslationUnit_None
+    );
 
-
-    Tokens tokens = tokenize(file);
-
-
-
-    for (size_t i=0; true; ++i) {
-        Token token = tokens.items[i];
-
-        if (!strlen(token.value)) {
-            printf("%s\n", token_kind_repr[token.kind]);
-        }
-        else {
-            printf("%s '%s'\n", token_kind_repr[token.kind], token.value);
-        }
-
-        if (token.kind == TOK_EOF) {
-            break;
-        }
+    if (unit == NULL) {
+        fprintf(stderr, "Failed to parse translation unit\n");
+        exit(EXIT_FAILURE);
     }
 
+    CXCursor cursor = clang_getTranslationUnitCursor(unit);
 
-    parse(tokens);
-
-
-
-    free(file);
-
-
+    clang_visitChildren(cursor, visit, NULL);
 
 
 

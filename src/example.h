@@ -1,1 +1,3 @@
-int foo(int a, int b);
+
+
+const char * foo(int a, int b);
