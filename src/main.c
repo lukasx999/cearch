@@ -169,6 +169,8 @@ int main(int argc, char *argv[]) {
     fgets(buf, INPUT_BUFSIZE, stdin);
     buf[strcspn(buf, "\n")] = '\0';
 
+    const char *types[] = { "int", "char", "bool" };
+
     puts(buf);
 
 
