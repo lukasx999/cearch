@@ -8,7 +8,7 @@
 
 #include <clang-c/Index.h>
 
-
+#include "./export.h"
 
 
 
@@ -24,48 +24,91 @@ void check_usage(int argc, char *argv[]) {
 
 
 
+
+void write_func_name_to_buf(char *buf, CXCursor cursor) {
+
+    CXString cursor_str      = clang_getCursorDisplayName(cursor);
+    const char *cursor_cstr  = clang_getCString(cursor_str);
+
+    size_t index = strcspn(cursor_cstr, "(");
+    strncpy(buf, cursor_cstr, index);
+
+    clang_disposeString(cursor_str);
+
+}
+
+
+typedef struct {
+    Functions *funcs;
+    Parameter *params;
+    size_t params_index;
+} RecState;
+
+
+
 enum CXChildVisitResult visit(
     CXCursor cursor,
     CXCursor parent,
     CXClientData client_data
 ) {
 
+    RecState *state = (RecState*) client_data;
 
-    CXType type = clang_getCursorType(cursor);
+    enum CXCursorKind kind   = clang_getCursorKind(cursor);
+    CXType type              = clang_getCursorType(cursor);
 
-
-
-    /*
-    enum CXCursorKind kind = clang_getCursorKind(cursor);
     switch (kind) {
         case CXCursor_FunctionDecl: {
+
+            CXType func_returntype  = clang_getResultType(type);
+
+            int param_count     = clang_getNumArgTypes(type);
+            Parameter *params   = calloc(param_count, sizeof(Parameter));
+            state->params       = params;
+            state->params_index = 0;
+
+            Function func = {
+                .identifier  = { 0 },
+                .returntype  = func_returntype,
+                .parameters  = params,
+                .param_count = (size_t) param_count,
+            };
+
+            write_func_name_to_buf(func.identifier, cursor);
+            functions_append(state->funcs, func);
+
+            return CXChildVisit_Recurse;
+
         } break;
 
         case CXCursor_ParmDecl: {
+            CXType param_type      = type;
+            CXString cursor_str    = clang_getCursorDisplayName(cursor);
+            const char *param_name = clang_getCString(cursor_str);
+
+            Parameter param = {
+                .identifier = { 0 },
+                .type = param_type,
+            };
+
+            strncpy(param.identifier, param_name, IDENTIFIER_BUFSIZE);
+            clang_disposeString(cursor_str);
+            state->params[state->params_index++] = param;
+
         } break;
+
+        default: {} break;
+
     }
-    */
 
-
-    CXString str = clang_getCursorDisplayName(cursor);
-
-    const char *c_str = clang_getCString(str);
-    printf("%s\n", c_str);
-
-    clang_disposeString(str);
-
-    return CXChildVisit_Recurse;
+    return CXChildVisit_Continue;
 
 }
 
 
 
-int main(int argc, char *argv[]) {
 
-    // check_usage(argc, argv);
-    // const char *filename = argv[1];
-
-    const char *filename = "example.h";
+CXCursor parse_translationunit(const char *filename) {
 
     CXIndex index = clang_createIndex(0, 0);
 
@@ -85,8 +128,38 @@ int main(int argc, char *argv[]) {
     }
 
     CXCursor cursor = clang_getTranslationUnitCursor(unit);
+    return cursor;
 
-    clang_visitChildren(cursor, visit, NULL);
+}
+
+
+
+
+
+
+int main(int argc, char *argv[]) {
+
+    // check_usage(argc, argv);
+    // const char *filename = argv[1];
+
+    const char *filename = "example.h";
+
+    CXCursor cursor = parse_translationunit(filename);
+
+
+    Functions funcs = functions_new();
+
+    RecState state = {
+        .funcs        = &funcs,
+        .params       = NULL,
+        .params_index = 0,
+    };
+
+    clang_visitChildren(cursor, visit, &state);
+
+    functions_print(&funcs);
+
+    functions_destroy(&funcs);
 
 
 
