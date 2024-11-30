@@ -25,24 +25,9 @@ void check_usage(int argc, char *argv[]) {
 }
 
 
-
-
-
-void write_func_name_to_buf(char *buf, CXCursor cursor) {
-
-    CXString cursor_str      = clang_getCursorDisplayName(cursor);
-    const char *cursor_cstr  = clang_getCString(cursor_str);
-
-    size_t index = strcspn(cursor_cstr, "(");
-    strncpy(buf, cursor_cstr, index);
-
-    clang_disposeString(cursor_str);
-
-}
-
-
 typedef struct {
     Functions *funcs;
+    // temporary values - do not read:
     Parameter *params;
     size_t params_index;
 } RecState;
@@ -64,7 +49,9 @@ enum CXChildVisitResult visit(
 
         case CXCursor_FunctionDecl: {
 
-            CXType func_returntype  = clang_getResultType(type);
+            CXType      func_returntype = clang_getResultType(type);
+            CXString    func_name       = clang_Cursor_getMangling(cursor);
+            const char *func_name_cstr  = clang_getCString(func_name);
 
             int param_count     = clang_getNumArgTypes(type);
             Parameter *params   = calloc(param_count, sizeof(Parameter));
@@ -78,25 +65,27 @@ enum CXChildVisitResult visit(
                 .param_count = (size_t) param_count,
             };
 
-            write_func_name_to_buf(func.identifier, cursor);
+            strncpy(func.identifier, func_name_cstr, IDENTIFIER_BUFSIZE-1);
+
             functions_append(state->funcs, func);
+            clang_disposeString(func_name);
 
             return CXChildVisit_Recurse;
 
         } break;
 
         case CXCursor_ParmDecl: {
-            CXType param_type      = type;
-            CXString cursor_str    = clang_getCursorDisplayName(cursor);
-            const char *param_name = clang_getCString(cursor_str);
+            CXType      param_type      = type;
+            CXString    param_name      = clang_Cursor_getMangling(cursor);
+            const char *param_name_cstr = clang_getCString(param_name);
 
             Parameter param = {
                 .identifier = { 0 },
                 .type = param_type,
             };
 
-            strncpy(param.identifier, param_name, IDENTIFIER_BUFSIZE);
-            clang_disposeString(cursor_str);
+            strncpy(param.identifier, param_name_cstr, IDENTIFIER_BUFSIZE-1);
+            clang_disposeString(param_name);
             state->params[state->params_index++] = param;
 
         } break;
@@ -135,9 +124,6 @@ CXCursor parse_translationunit(const char *filename) {
     return cursor;
 
 }
-
-
-
 
 
 

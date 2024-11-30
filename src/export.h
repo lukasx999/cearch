@@ -14,7 +14,7 @@ typedef struct {
 typedef struct {
     CXType returntype;
     char identifier[IDENTIFIER_BUFSIZE];
-    Parameter *parameters;
+    Parameter *parameters; // heap-alloc'd
     size_t param_count;
 } Function;
 
