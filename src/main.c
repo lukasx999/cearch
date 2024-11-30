@@ -123,6 +123,19 @@ enum CXChildVisitResult visit(
 
 }
 
+// Caller is responsible for freeing
+char** export_function_names(Functions *funcs) {
+
+    char **function_list = calloc(funcs->size, sizeof(char*));
+
+    for (size_t i=0; i < funcs->size; ++i) {
+        function_list[i] = calloc(IDENTIFIER_BUFSIZE, sizeof(char));
+        strncpy(function_list[i], funcs->items[i].identifier, IDENTIFIER_BUFSIZE-1);
+    }
+
+    return function_list;
+
+}
 
 
 
@@ -153,10 +166,27 @@ int main(int argc, char *argv[]) {
 
     functions_print(&funcs);
 
+    char **function_list = export_function_names(&funcs);
+
+    FILE *f = fopen("functions.export", "w");
+
+    for (size_t i=0; i < funcs.size; ++i) {
+        printf("func: %s\n", function_list[i]);
+        fprintf(f, "%s\n", function_list[i]);
+    }
+
+    fclose(f);
+
+
+
+
+
+
+
 
     // (int, char, bool) -> int
     char buf[INPUT_BUFSIZE] = { 0 };
-    fgets(buf, INPUT_BUFSIZE, stdin);
+    // fgets(buf, INPUT_BUFSIZE, stdin);
     buf[strcspn(buf, "\n")] = '\0';
 
     const char *types[] = { "int", "char", "bool" };
