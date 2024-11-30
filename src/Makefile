@@ -1,9 +1,9 @@
 CC=gcc
 CFLAGS=-Wall -Wextra -ggdb -std=c99 -pedantic
 LIBS=-lclang
-DEPS=export.h
+DEPS=export.h funcparse.h
 
-all: main.o export.o $(DEPS)
+all: main.o export.o funcparse.o $(DEPS)
 	$(CC) $(CFLAGS) $(LIBS) $^ -o out
 
 %.o: %.c Makefile

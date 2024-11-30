@@ -9,6 +9,7 @@
 #include <clang-c/Index.h>
 
 #include "./export.h"
+#include "./funcparse.h"
 
 
 #define INPUT_BUFSIZE 100
@@ -23,119 +24,6 @@ void check_usage(int argc, char *argv[]) {
 }
 
 
-typedef struct {
-    Functions *funcs;
-    // temporary values - do not read:
-    Parameter *params;
-    size_t params_index;
-} RecState;
-
-
-
-CXCursor parse_translationunit(const char *filename) {
-
-    CXIndex index = clang_createIndex(0, 0);
-
-    CXTranslationUnit unit = clang_parseTranslationUnit(
-        index,
-        filename,
-        NULL,
-        0,
-        NULL,
-        0,
-        CXTranslationUnit_None
-    );
-
-    if (unit == NULL) {
-        fprintf(stderr, "Failed to parse translation unit\n");
-        exit(EXIT_FAILURE);
-    }
-
-    CXCursor cursor = clang_getTranslationUnitCursor(unit);
-    return cursor;
-
-}
-
-
-
-
-enum CXChildVisitResult visit(
-    CXCursor cursor,
-    CXCursor parent,
-    CXClientData client_data
-) {
-
-    RecState *state = (RecState*) client_data;
-
-    enum CXCursorKind kind   = clang_getCursorKind(cursor);
-    CXType type              = clang_getCursorType(cursor);
-
-    switch (kind) {
-
-        case CXCursor_FunctionDecl: {
-
-            CXType      func_returntype = clang_getResultType(type);
-            CXString    func_name       = clang_Cursor_getMangling(cursor);
-            const char *func_name_cstr  = clang_getCString(func_name);
-
-            int param_count     = clang_getNumArgTypes(type);
-            Parameter *params   = calloc(param_count, sizeof(Parameter));
-            state->params       = params;
-            state->params_index = 0;
-
-            Function func = {
-                .returntype  = func_returntype,
-                .identifier  = { 0 },
-                .parameters  = params,
-                .param_count = (size_t) param_count,
-            };
-
-            strncpy(func.identifier, func_name_cstr, IDENTIFIER_BUFSIZE-1);
-
-            functions_append(state->funcs, func);
-            clang_disposeString(func_name);
-
-            return CXChildVisit_Recurse;
-
-        } break;
-
-        case CXCursor_ParmDecl: {
-            CXType      param_type      = type;
-            CXString    param_name      = clang_Cursor_getMangling(cursor);
-            const char *param_name_cstr = clang_getCString(param_name);
-
-            Parameter param = {
-                .identifier = { 0 },
-                .type       = param_type,
-            };
-
-            strncpy(param.identifier, param_name_cstr, IDENTIFIER_BUFSIZE-1);
-            clang_disposeString(param_name);
-            state->params[state->params_index++] = param;
-
-        } break;
-
-        default: {} break;
-
-    }
-
-    return CXChildVisit_Continue;
-
-}
-
-// Caller is responsible for freeing
-char** export_function_names(Functions *funcs) {
-
-    char **function_list = calloc(funcs->size, sizeof(char*));
-
-    for (size_t i=0; i < funcs->size; ++i) {
-        function_list[i] = calloc(IDENTIFIER_BUFSIZE, sizeof(char));
-        strncpy(function_list[i], funcs->items[i].identifier, IDENTIFIER_BUFSIZE-1);
-    }
-
-    return function_list;
-
-}
 
 
 
@@ -151,21 +39,17 @@ int main(int argc, char *argv[]) {
 
     const char *filename = "example.h";
 
-    CXCursor cursor = parse_translationunit(filename);
+    Functions funcs = { 0 };
+    int err = parse_translationunit(&funcs, filename);
 
-
-    Functions funcs = functions_new();
-
-    RecState state = {
-        .funcs        = &funcs,
-        .params       = NULL,
-        .params_index = 0,
-    };
-
-    clang_visitChildren(cursor, visit, &state);
+    if (err != 0) {
+        fprintf(stderr, "Failed to parse Translation Unit\n");
+        exit(1);
+    }
 
     functions_print(&funcs);
 
+    #if 0
     char **function_list = export_function_names(&funcs);
 
     FILE *f = fopen("functions.export", "w");
@@ -176,9 +60,7 @@ int main(int argc, char *argv[]) {
     }
 
     fclose(f);
-
-
-
+    #endif
 
 
 

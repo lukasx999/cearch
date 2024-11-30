@@ -8,12 +8,12 @@
 
 typedef struct {
     CXType type;
-    char identifier[IDENTIFIER_BUFSIZE];
+    CXString identifier; // empty if none
 } Parameter;
 
 typedef struct {
     CXType returntype;
-    char identifier[IDENTIFIER_BUFSIZE];
+    CXString identifier; // empty if none
     Parameter *parameters; // heap-alloc'd
     size_t param_count;
 } Function;
@@ -25,8 +25,8 @@ typedef struct {
 } Functions;
 
 extern Functions functions_new(void);
-extern void functions_append(Functions *funcs, Function new_);
+extern void functions_append (Functions *funcs, Function new_);
 extern void functions_destroy(Functions *funcs);
-extern void functions_print(Functions *funcs);
+extern void functions_print  (Functions *funcs);
 
 #endif // _EXPORT_H

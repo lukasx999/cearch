@@ -34,7 +34,17 @@ void functions_append(Functions *funcs, Function new) {
 void functions_destroy(Functions *funcs) {
 
     for (size_t i=0; i < funcs->size; ++i) {
-        free(funcs->items[i].parameters);
+
+        Function *f = &funcs->items[i];
+
+        for (size_t j=0; j < f->param_count; ++j) {
+            Parameter *p = &f->parameters[j];
+            clang_disposeString(p->identifier);
+        }
+
+        clang_disposeString(f->identifier);
+        free(f->parameters);
+
     }
 
     free(funcs->items);
@@ -45,11 +55,11 @@ void functions_print(Functions *funcs) {
     for (size_t i=0; i < funcs->size; ++i) {
 
         Function current_func = funcs->items[i];
-        const char *id = current_func.identifier;
-        CXType returntype            = current_func.returntype;
 
-        CXString returntype_str      = clang_getTypeKindSpelling(returntype.kind);
-        const char * returntype_cstr = clang_getCString(returntype_str);
+        const char *id              = clang_getCString(current_func.identifier);
+
+        CXString    returntype_str  = clang_getTypeKindSpelling(current_func.returntype.kind);
+        const char *returntype_cstr = clang_getCString(returntype_str);
 
         printf("func: %s -> %s\n", id, returntype_cstr);
         clang_disposeString(returntype_str);
@@ -59,11 +69,10 @@ void functions_print(Functions *funcs) {
 
             Parameter current_param = current_func.parameters[j];
 
-            const char *param_id = current_param.identifier;
-            CXType type = current_param.type;
+            const char *param_id  = clang_getCString(current_param.identifier);
 
-            CXString type_str      = clang_getTypeKindSpelling(type.kind);
-            const char * type_cstr = clang_getCString(type_str);
+            CXString    type_str  = clang_getTypeKindSpelling(current_param.type.kind);
+            const char *type_cstr = clang_getCString(type_str);
 
             printf("\tparam: %s (%s)\n", param_id, type_cstr);
             clang_disposeString(type_str);
