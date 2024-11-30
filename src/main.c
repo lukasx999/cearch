@@ -6,6 +6,7 @@
 #include <string.h>
 #include <sys/stat.h>
 
+#include <readline/readline.h>
 #include <clang-c/Index.h>
 
 #include "./export.h"
@@ -24,12 +25,13 @@ void check_usage(int argc, char *argv[]) {
 }
 
 
-
-
-
-
-// TODO: Export list of functions
-// TODO: Get list of functions for fuzzy-finding with fzf
+// Roadmap
+// [] query types
+// [] Type Qualifiers (const, restrict, volatile)
+// [] Pointers
+// [] Elaborate Types (typedefs)
+// [] Wildcards (+, *)
+// [] Parameter identifiers
 
 
 int main(int argc, char *argv[]) {
@@ -65,15 +67,51 @@ int main(int argc, char *argv[]) {
 
 
 
+    const char *types[] = { "int", "char", "bool", "const" };
 
-    // (int, char, bool) -> int
-    char buf[INPUT_BUFSIZE] = { 0 };
-    // fgets(buf, INPUT_BUFSIZE, stdin);
-    buf[strcspn(buf, "\n")] = '\0';
+    // Example Query
+    // void -> void
+    // void -> int
+    // int, char, bool -> +
+    // int, +, bool -> int (matches exactly one type)
+    // int, char, * -> int (matches any number of types)
+    // int, *, char -> int
+    const char *query = readline("(query) ");
 
-    const char *types[] = { "int", "char", "bool" };
+    size_t position = 0;
 
-    puts(buf);
+    while (1) {
+
+        const char c = query[position];
+
+        if (position == strlen(query)) {
+            break;
+        }
+
+        switch (c) {
+
+            case '-': {
+            } break;
+
+            case ',': {
+            } break;
+
+            case '+': {
+            } break;
+
+            case '*': {
+            } break;
+
+            default: {
+            } break;
+
+        }
+
+
+
+        position++;
+
+    }
 
 
 

@@ -15,7 +15,7 @@ typedef struct {
 
 
 
-Function build_function(RecState *state, CXType type, CXCursor cursor) {
+Function_ build_function(RecState *state, CXType type, CXCursor cursor) {
 
     CXType      func_returntype = clang_getResultType(type);
     CXString    func_name       = clang_Cursor_getMangling(cursor);
@@ -25,7 +25,7 @@ Function build_function(RecState *state, CXType type, CXCursor cursor) {
     state->params       = params;
     state->params_index = 0;
 
-    Function func = {
+    Function_ func = {
         .returntype  = func_returntype,
         .identifier  = func_name,
         .parameters  = params,
@@ -65,7 +65,7 @@ enum CXChildVisitResult visit( CXCursor cursor,
 
         case CXCursor_FunctionDecl: {
 
-            Function func = build_function(state, type, cursor);
+            Function_ func = build_function(state, type, cursor);
             functions_append(state->funcs, func);
 
             return CXChildVisit_Recurse;

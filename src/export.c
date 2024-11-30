@@ -14,17 +14,17 @@ Functions functions_new(void) {
         .items    = NULL,
     };
 
-    functions.items = calloc(functions.capacity, sizeof(Function));
+    functions.items = calloc(functions.capacity, sizeof(Function_));
 
     return functions;
 
 }
 
-void functions_append(Functions *funcs, Function new) {
+void functions_append(Functions *funcs, Function_ new) {
 
     if (funcs->size == funcs->capacity) {
         funcs->capacity *= 2;
-        funcs->items = realloc(funcs->items, funcs->capacity * sizeof(Function));
+        funcs->items = realloc(funcs->items, funcs->capacity * sizeof(Function_));
     }
 
     funcs->items[funcs->size++] = new;
@@ -35,7 +35,7 @@ void functions_destroy(Functions *funcs) {
 
     for (size_t i=0; i < funcs->size; ++i) {
 
-        Function *f = &funcs->items[i];
+        Function_ *f = &funcs->items[i];
 
         for (size_t j=0; j < f->param_count; ++j) {
             Parameter *p = &f->parameters[j];
@@ -54,7 +54,7 @@ void functions_print(Functions *funcs) {
 
     for (size_t i=0; i < funcs->size; ++i) {
 
-        Function current_func = funcs->items[i];
+        Function_ current_func = funcs->items[i];
 
         const char *id              = clang_getCString(current_func.identifier);
 

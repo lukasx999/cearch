@@ -7,25 +7,25 @@
 
 
 typedef struct {
-    CXType type;
+    CXType   type;
     CXString identifier; // empty if none
 } Parameter;
 
 typedef struct {
-    CXType returntype;
-    CXString identifier; // empty if none
+    CXType     returntype;
+    CXString   identifier; // empty if none
     Parameter *parameters; // heap-alloc'd
-    size_t param_count;
-} Function;
+    size_t     param_count;
+} Function_;
 
 typedef struct {
-    size_t size;
-    size_t capacity;
-    Function *items;
+    size_t     size;
+    size_t     capacity;
+    Function_ *items;
 } Functions;
 
 extern Functions functions_new(void);
-extern void functions_append (Functions *funcs, Function new_);
+extern void functions_append (Functions *funcs, Function_ new_);
 extern void functions_destroy(Functions *funcs);
 extern void functions_print  (Functions *funcs);
 

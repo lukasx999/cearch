@@ -1,6 +1,6 @@
 CC=gcc
 CFLAGS=-Wall -Wextra -ggdb -std=c99 -pedantic
-LIBS=-lclang
+LIBS=-lclang -lreadline
 DEPS=export.h funcparse.h
 
 all: main.o export.o funcparse.o $(DEPS)
