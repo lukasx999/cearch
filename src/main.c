@@ -11,6 +11,7 @@
 
 #include "./export.h"
 #include "./funcparse.h"
+#include "./query_parser.h"
 
 
 #define INPUT_BUFSIZE 100
@@ -25,12 +26,19 @@ void check_usage(int argc, char *argv[]) {
 }
 
 
+
+
+
+
+
+
 // Roadmap
 // [] query types
 // [] Type Qualifiers (const, restrict, volatile)
 // [] Pointers
 // [] Elaborate Types (typedefs)
-// [] Wildcards (+, *)
+// [] case-insensitive matching
+// [] Wildcards (+, #)
 // [] Parameter identifiers
 
 
@@ -49,70 +57,25 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
-    functions_print(&funcs);
+    // functions_print(&funcs);
 
-    #if 0
-    char **function_list = export_function_names(&funcs);
-
-    FILE *f = fopen("functions.export", "w");
-
-    for (size_t i=0; i < funcs.size; ++i) {
-        printf("func: %s\n", function_list[i]);
-        fprintf(f, "%s\n", function_list[i]);
-    }
-
-    fclose(f);
-    #endif
-
-
-
-
-    const char *types[] = { "int", "char", "bool", "const" };
 
     // Example Query
     // void -> void
     // void -> int
     // int, char, bool -> +
     // int, +, bool -> int (matches exactly one type)
-    // int, char, * -> int (matches any number of types)
-    // int, *, char -> int
+    // int, char, # -> int (matches any number of types)
+    // int, #, char -> int
     const char *query = readline("(query) ");
 
-    size_t position = 0;
+    FunctionQuery func_query = { 0 };
 
-    while (1) {
-
-        const char c = query[position];
-
-        if (position == strlen(query)) {
-            break;
-        }
-
-        switch (c) {
-
-            case '-': {
-            } break;
-
-            case ',': {
-            } break;
-
-            case '+': {
-            } break;
-
-            case '*': {
-            } break;
-
-            default: {
-            } break;
-
-        }
-
-
-
-        position++;
-
+    err = parse_query(&func_query, query);
+    if (err != 0) {
+        fprintf(stderr, "Invalid Query: %s\n", query);
+        exit(1);
     }
-
 
 
 
