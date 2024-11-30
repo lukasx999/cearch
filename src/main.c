@@ -16,12 +16,10 @@
 
 
 void check_usage(int argc, char *argv[]) {
-
     if (argc < 2 || argc > 2) {
         fprintf(stderr, "Usage: %s <file>\n", argv[0]);
         exit(EXIT_FAILURE);
     }
-
 }
 
 
@@ -31,6 +29,33 @@ typedef struct {
     Parameter *params;
     size_t params_index;
 } RecState;
+
+
+
+CXCursor parse_translationunit(const char *filename) {
+
+    CXIndex index = clang_createIndex(0, 0);
+
+    CXTranslationUnit unit = clang_parseTranslationUnit(
+        index,
+        filename,
+        NULL,
+        0,
+        NULL,
+        0,
+        CXTranslationUnit_None
+    );
+
+    if (unit == NULL) {
+        fprintf(stderr, "Failed to parse translation unit\n");
+        exit(EXIT_FAILURE);
+    }
+
+    CXCursor cursor = clang_getTranslationUnitCursor(unit);
+    return cursor;
+
+}
+
 
 
 
@@ -81,7 +106,7 @@ enum CXChildVisitResult visit(
 
             Parameter param = {
                 .identifier = { 0 },
-                .type = param_type,
+                .type       = param_type,
             };
 
             strncpy(param.identifier, param_name_cstr, IDENTIFIER_BUFSIZE-1);
@@ -101,30 +126,9 @@ enum CXChildVisitResult visit(
 
 
 
-CXCursor parse_translationunit(const char *filename) {
 
-    CXIndex index = clang_createIndex(0, 0);
-
-    CXTranslationUnit unit = clang_parseTranslationUnit(
-        index,
-        filename,
-        NULL,
-        0,
-        NULL,
-        0,
-        CXTranslationUnit_None
-    );
-
-    if (unit == NULL) {
-        fprintf(stderr, "Failed to parse translation unit\n");
-        exit(EXIT_FAILURE);
-    }
-
-    CXCursor cursor = clang_getTranslationUnitCursor(unit);
-    return cursor;
-
-}
-
+// TODO: Export list of functions
+// TODO: Get list of functions for fuzzy-finding with fzf
 
 
 int main(int argc, char *argv[]) {
